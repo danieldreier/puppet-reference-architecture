@@ -31,33 +31,45 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       node.vm.provision :hosts
       node.vm.provision "shell",
         inline: "bash /vagrant/bootstrap-master.sh"
-
-      # nuke the discovery cluster when we start to clear out previous nodes
-#      node.vm.provision "shell",
-#        inline: "curl -XDELETE #{ETCD_DISCOVERY_URL}/_state"
-#      node.vm.provision "shell",
-#        inline: "FACTER_etcd_discovery_url=#{ETCD_DISCOVERY_URL} puppet apply /vagrant/tests/install_etcd_with_watch.pp"
     end
-    config.vm.define :node1 do |node|
-      node.vm.hostname = 'server2.boxnet'
+    config.vm.define :apachepuppetmaster do |node|
+      node.vm.hostname = 'puppetmaster-apache01-vagrant.example.com'
       node.vm.network :private_network, :auto_network => true
       node.vm.provision :hosts
-#      node.vm.provision "shell",
-#        inline: "FACTER_etcd_discovery_url=#{ETCD_DISCOVERY_URL} puppet apply /vagrant/tests/install_etcd_with_watch.pp"
+    #  node.vm.provision "shell",
+    #    inline: "bash /vagrant/bootstrap-master.sh"
     end
-
-    config.vm.define :node2 do |node|
-      node.vm.hostname = 'server2.boxnet'
+    config.vm.define :lb01 do |node|
+      node.vm.hostname = 'website-lb01-vagrant.example.com'
       node.vm.network :private_network, :auto_network => true
       node.vm.provision :hosts
-#      node.vm.provision "shell",
-#        inline: "FACTER_etcd_discovery_url=#{ETCD_DISCOVERY_URL} puppet apply /vagrant/tests/install_etcd_with_watch.pp"
     end
-    config.vm.define :node3 do |node|
-      node.vm.hostname = 'server3.boxnet'
+    config.vm.define :lb02 do |node|
+      node.vm.hostname = 'website-lb02-vagrant.example.com'
       node.vm.network :private_network, :auto_network => true
       node.vm.provision :hosts
-#      node.vm.provision "shell",
-#        inline: "FACTER_etcd_discovery_url=#{ETCD_DISCOVERY_URL} puppet apply /vagrant/tests/install_etcd_with_watch.pp"
+    end
+    config.vm.define :web01 do |node|
+      node.vm.hostname = 'website-web01-vagrant.example.com'
+      node.vm.network :private_network, :auto_network => true
+      node.vm.provision :hosts
+      node.vm.provision "shell",
+        inline: "puppet agent --test --server puppetmaster-aio01-vagrant.example.com --waitforcert 5"
+    end
+    config.vm.define :web02 do |node|
+      node.vm.hostname = 'website-web02-vagrant.example.com'
+      node.vm.box = 'puppetlabs/debian-7.6-64-puppet'
+      node.vm.network :private_network, :auto_network => true
+      node.vm.provision :hosts
+      node.vm.provision "shell",
+        inline: "puppet agent --test --server puppetmaster-aio01-vagrant.example.com --waitforcert 5"
+    end
+    config.vm.define :web03 do |node|
+      node.vm.hostname = 'website-web03-vagrant.example.com'
+      node.vm.box = 'puppetlabs/debian-7.6-64-puppet'
+      node.vm.network :private_network, :auto_network => true
+      node.vm.provision :hosts
+      node.vm.provision "shell",
+        inline: "puppet agent --test --server puppetmaster-aio01-vagrant.example.com --waitforcert 5"
     end
 end

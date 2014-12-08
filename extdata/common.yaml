@@ -1,3 +1,7 @@
 ---
 # Puppet agent setup
-puppet::agent::configtimeout: 900
+puppet::agent::configtimeout: '900'
+puppet::agent::stringify_facts: 'false'
+
+# https://discovery.etcd.io/new
+profile::etcd::discovery_url: 'https://discovery.etcd.io/e43af4dc0ba443bdc7fc62f45dcd20fc'

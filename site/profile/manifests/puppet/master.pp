@@ -1,10 +1,17 @@
 # Class: profile::puppet::master
 #
-class profile::puppet::master {
-
+class profile::puppet::master (
+  $servertype = 'unicorn'
+  ){
   # uncomment this if you use this outside of vagrant
   #$datadir = "${::settings::confdir}/environments/%{environment}/extdata"
   $datadir = "/vagrant/extdata"
+
+  $master_service = $servertype? {
+      'unicorn'   => 'unicorn_puppetmaster',
+      'passenger' => 'apache2',
+  }
+
 
   class { '::r10k':
     sources   => {
@@ -36,22 +43,25 @@ class profile::puppet::master {
 #   eyaml         => true,
     datadir   => $datadir,
 #   eyaml_datadir => $datadir,
-    notify    => Service['unicorn_puppetmaster'],
+    notify    => Service[$master_service],
   }
 
   class { '::puppet::server':
     modulepath      => [
       '/vagrant/site',
+      '/vagrant/modules',
       '$confdir/modules',
       '$confdir/environments/$environment/modules/site',
       '$confdir/environments/$environment/modules/site/dist',
     ],
     manage_puppetdb => true,
     reporturl       => "https://${::fqdn}/reports",
-    servertype      => 'unicorn',
+    servertype      => $servertype,
     manifest        => '/vagrant/site.pp',
+    parser          => 'future',
     ca              => true,
     stringify_facts => false,
+    agent_installer => true,
     reports         => [
       'https',
       'store',

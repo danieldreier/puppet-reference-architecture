@@ -6,6 +6,13 @@ mod "puppetlabs/firewall"
 mod "puppetlabs/ntp"
 mod "puppetlabs/stdlib"
 mod "hunner/hiera"
+mod 'puppetdbquery',
+  :git => 'git://github.com/dalen/puppet-puppetdbquery.git'
+
+mod "puppetlabs/haproxy"
+
+mod "danieldreier/trigger"
+mod "gini/archive"
 
 # zack/r10k deps
 mod "zack/r10k"
@@ -16,8 +23,8 @@ mod "puppetlabs/git"
 
 # puppet-puppet dependencies
 mod "puppet",
-  :git => 'git://github.com/puppetlabs-operations/puppet-puppet.git',
-  :ref => '2a5756b5ae77164e084678bd8fb1a43075427718'
+  :git => 'git://github.com/danieldreier/puppet-puppet.git',
+  :ref => 'agent_future_parser'
 mod "puppetlabs/inifile"
 mod "ploperations/puppetlabs_apt"
 mod "ploperations/interval"
@@ -28,3 +35,4 @@ mod "ploperations/bundler"
 mod "ploperations/rack"
 mod "puppetlabs/postgresql"
 mod "puppetlabs/ruby"
+mod "puppetlabs/apache"
