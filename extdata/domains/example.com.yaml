@@ -1,0 +1,5 @@
+---
+# Puppet agent setup
+puppet::agent::server: puppetmaster-aio01-vagrant.example.com
+puppet::agent::ca_server: puppetmaster-aio01-vagrant.example.com
+puppet::agent::report_server: puppetmaster-aio01-vagrant.example.com

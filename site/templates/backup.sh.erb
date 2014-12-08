@@ -1,0 +1,68 @@
+#!/bin/bash
+
+set -e # exit on any errors since the rms could clobber files
+#set -x # show each line before it's run, for debugging
+
+debug_msg() {
+  if [ "$DEBUG" == "true" ]
+  then
+    logger "backup.sh $(date): $1"
+  fi
+}
+
+debug_msg "starting backup script"
+
+# cron doesn't have path set on all systems
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+# Want to troubleshoot this script? Copy the exports below into a shell session, then you can copy-paste commands straight from the script
+export OS_AUTH_URL='<%= @backup["os_auth_url"] %>'
+export OS_REGION_NAME='<%= @backup["region"] %>'
+export OS_TENANT_ID='<%= @backup["tenant"] %>'
+export OS_USERNAME='<%= @backup["username"] %>'
+export OS_PASSWORD='<%= @backup["password"] %>'
+CONTAINER_PREFIX='<%= @backup["container_prefix"] %>'
+
+DATE="$(date +%Y-%m)"
+NOW="$(date +%Y%m%d%H%I%S)"
+DB_BACKUP_DIR='/opt/backup/db'
+WWW_ROOT='<%= @web_dir %>'
+
+WWW_CONTAINER="${CONTAINER_PREFIX}${DATE}-www" # bullseye-2014-06-www
+DB_CONTAINER="${CONTAINER_PREFIX}${DATE}-db" # bullseye-2014-06-db
+DB_ARCHIVE_CONTAINER="${CONTAINER_PREFIX}${DATE}-database-archive" # bullseye-2014-06-database-archive
+
+swift post "${WWW_CONTAINER}" # create container to back up to
+swift post "${DB_CONTAINER}" # create container to back up to
+swift post "${DB_ARCHIVE_CONTAINER}" # create container for historical backup archive
+
+backup_database() {
+  debug_msg "starting backup_database()"
+  # Export and upload the database
+  mkdir -p "${DB_BACKUP_DIR}"
+  cd "${DB_BACKUP_DIR}"
+  <% @databases.each do |database, setting| -%>
+  echo "Processing <%= database %>..."
+  dump_name="${NOW}-"<%= database %>".sql"
+  mysqldump --extended-insert=FALSE --host="<%= setting["host"] %>" --user="<%= setting["user"] %>" --password='<%= setting["password"] %>' "<%= database %>" > "${dump_name}"
+  gzip -f --rsyncable -q "${dump_name}"
+  swift upload --snet "${DB_CONTAINER}" --object-name "<%= database %>".sql.gz "${dump_name}".gz
+
+<% end -%>
+  # backup all old db exports in addition to the current one
+  # having these in a separate container makes it easier to clean up old stuff without impacting current backups
+  cd "${DB_BACKUP_DIR}"
+  swift upload --snet --object-threads=50 --skip-identical "${DB_ARCHIVE_CONTAINER}" .
+}
+
+backup_www() {
+  debug_msg "starting backup_www"
+  cd "${WWW_ROOT}"
+  swift upload --snet --object-threads=50 --skip-identical "${WWW_CONTAINER}" .
+  # TODO : Delete the configuration file(s) from the backup set. we don't want those stored.
+}
+
+backup_database
+backup_www
+# cleanup
+debug_msg "backup finished"

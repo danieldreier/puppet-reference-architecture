@@ -1,0 +1,23 @@
+#!/bin/bash
+
+export OS_AUTH_URL='<%= @backup["os_auth_url"] %>'
+export OS_REGION_NAME='<%= @backup["region"] %>'
+export OS_TENANT_ID='<%= @backup["tenant"] %>'
+export OS_USERNAME='<%= @backup["username"] %>'
+export OS_PASSWORD='<%= @backup["password"] %>'
+
+if [ -z "$1" ] ; then
+  echo "ERROR: Container must be specified."
+  echo "Available containers:"
+  swift list --snet | sort
+  exit 1
+fi
+
+START="$(date +%s)"
+
+echo "Deleting container $1..."
+swift delete --snet --object-threads=50 "$1"
+
+END="$(date +%s)"
+DIFF="$((${END}-${START}))"
+echo "Deleting the container took $((${DIFF} / 60)) minutes and $((${DIFF} % 60)) seconds."

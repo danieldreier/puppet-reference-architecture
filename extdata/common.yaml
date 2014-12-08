@@ -1,0 +1,3 @@
+---
+# Puppet agent setup
+puppet::agent::configtimeout: 900

@@ -1,0 +1,244 @@
+heat_template_version: 2013-05-23
+# you'll want to run this with something like
+# heat stack-create bullseyeglass --template-file bullseyeglass.template --parameters="key_name=Ben Sandberg"
+
+description: Bullseye Glass web stack
+
+parameter_groups:
+- label: Server Settings
+  parameters:
+  - key_name
+  - hostname
+  - server_flavor
+  - db_flavor
+  - db_size
+  - container_prefix
+- label: Website Settings
+  parameters:
+  - domain
+  - environment
+  - primary_db_name
+  - primary_db_user
+  - secondary_db_name
+  - secondary_db_user
+
+parameters:
+  container_prefix:
+    default: "<%= @rackspace["container_prefix"] %>"
+    description: The Rackspace Cloud Files container name prefix.
+    label: Container prefix
+    type: string
+  db_flavor:
+    constraints:
+    - allowed_values:
+      - 512MB Instance
+      - 1GB Instance
+      - 2GB Instance
+      description: |
+        Must be a valid Rackspace Cloud Database flavor.
+    default: 1GB Instance
+    description: |
+      Required: Rackspace Cloud Database flavor to use. The size is based on the
+      amount of RAM for the provisioned database instance.
+    label: Database Instance Size
+    type: string
+  db_size:
+    constraints:
+    - range: { min: 1, max: 10 }
+    default: 3
+    description: |
+      The amount of storage capacity available to the database instance, in GB
+    label: Database Instance Storage Size
+    type: number
+  domain:
+    constraints:
+    - allowed_pattern: "^[a-zA-Z0-9.-]{1,255}.[a-zA-Z]{2,15}$"
+      description: Must be a valid domain name
+    default: "bullseyeglass.com"
+    description: Domain to be used
+    label: Site Domain
+    type: string
+  environment:
+    constraints:
+    - allowed_values:
+      - prod
+      - production
+      - stage
+      - staging
+      - dev
+      - development
+      description: Must be either production, staging, or development.
+    default: staging
+    description: should be development, production, or staging
+    label: Environment
+    type: string
+  hostname:
+    constraints:
+    - length:
+        min: 1
+        max: 64
+    - allowed_pattern: "^[a-zA-Z0-9.-]{1,255}.[a-zA-Z]{2,15}$"
+      description: |
+        Must begin with a letter and contain only alphanumeric characters.
+    default: staging.bullseyeglass.com
+    description: Hostname to use for the server that is built.
+    label: Server Name
+    type: string
+  key_name:
+    default: "<%= @rackspace["name"] %>"
+    description: Name of an existing key pair, found in the Rackspace web UI, to include in new instances
+    type: string
+  primary_db_name:
+    default: "joomla_db"
+    description: Name of the Joomla / PhpBB database
+    label: Primary Database Name
+    type: string
+  primary_db_user:
+    default: "joomla_user"
+    description: Name of the Joomla / PhpBB database user
+    label: Primary Database User
+    type: string
+  rackspace_key:
+    default: "<%= @rackspace["apikey"] %>"
+    description: API Key for the Rackspace user with access to site restoration resources
+    label: Rackspace API Key
+    type: string
+  rackspace_password:
+    default: "<%= @rackspace["password"] %>"
+    description: Password for the Rackspace user with access to site restoration resources
+    label: Rackspace Password
+    type: string
+  rackspace_region:
+    constraints:
+    - allowed_values:
+      - DFW
+      - IAD
+      - ORD
+      description: |
+        Must be a valid Rackspace region.
+    default: "<%= @rackspace["region"] %>"
+    description: Region with resources for site restoration
+    label: Rackspace Region
+    type: string
+  rackspace_tenant:
+    default: "<%= @rackspace["tenant"] %>"
+    description: User/Tenant ID for the Rackspace account with access to site restoration resources
+    label: Rackspace Tenant ID
+    type: number
+  rackspace_user:
+    default: "<%= @rackspace["username"] %>"
+    description: Username for the Rackspace user with access to site restoration resources
+    label: Rackspace Username
+    type: string
+  secondary_db_name:
+    default: "postaff_db"
+    description: Name of the PAP4 database
+    label: Secondary Database Name
+    type: string
+  secondary_db_user:
+    default: "postaff_user"
+    description: Name of the PAP4 database user
+    label: Secondary Database User
+    type: string
+  server_flavor:
+    constraints:
+    - allowed_values:
+      - 1 GB Performance
+      - 2 GB Performance
+      - 4 GB Performance
+      - 8 GB Performance
+      - 1GB Standard Instance
+      - 2GB Standard Instance
+      - 4GB Standard Instance
+      - 8GB Standard Instance
+      description: |
+        Must be a valid Rackspace Cloud Server flavor.
+    default: 2 GB Performance
+    description: |
+      Required: Rackspace Cloud Server flavor to use. The size is based on the
+      amount of RAM for the provisioned server.
+    label: Server Size
+    type: string
+
+resources:
+  joomla_db_password:
+    type: "OS::Heat::RandomString"
+    properties:
+      length: 16
+      sequence: lettersdigits
+  postaff_db_password:
+    type: "OS::Heat::RandomString"
+    properties:
+      length: 16
+      sequence: lettersdigits
+  web:
+    type: "OS::Nova::Server"
+    properties:
+      config_drive: "true"
+      flavor: { get_param: server_flavor }
+      image: Ubuntu 12.04 LTS (Precise Pangolin) (PVHVM)
+      key_name: { get_param: key_name }
+      name: { get_param: hostname }
+      metadata:
+        rax-heat: { get_param: "OS::stack_id" }
+      personality:
+        /root/.hushlogin: ""
+        /root/.ssh/bullseye-infrastructure-id_rsa.pub: { get_file: /home/vagrant/keys/bullseye-infrastructure-id_rsa.pub }
+        /root/.ssh/bullseye-infrastructure-data-id_rsa.pub: { get_file: /home/vagrant/keys/bullseye-infrastructure-data-id_rsa.pub }
+      user_data:
+        str_replace:
+          template: { get_file: /vagrant/setup.sh }
+          params:
+            $ENVIRONMENT: { get_param: environment }
+            $REPO_PRIVATE_KEY: { get_file: /home/vagrant/keys/bullseye-infrastructure-id_rsa }
+            $DATA_PRIVATE_KEY: { get_file: /home/vagrant/keys/bullseye-infrastructure-data-id_rsa }
+            $RACKSPACE_API_KEY: { get_param: rackspace_key }
+            $RACKSPACE_PASSWORD: { get_param: rackspace_password }
+            $RACKSPACE_REGION: { get_param: rackspace_region }
+            $RACKSPACE_TENANT: { get_param: rackspace_tenant }
+            $RACKSPACE_USER: { get_param: rackspace_user }
+            $CONTAINER_PREFIX: { get_param: container_prefix }
+            $FQDN: { get_param: hostname }
+            $DB_HOSTNAME: { get_attr: [db, hostname] }
+            $PRI_DB_NAME: { get_param: primary_db_name }
+            $PRI_DB_USER: { get_param: primary_db_user }
+            $PRI_DB_PASS: { get_attr: [joomla_db_password, value] }
+            $SEC_DB_NAME: { get_param: secondary_db_name }
+            $SEC_DB_USER: { get_param: secondary_db_user }
+            $SEC_DB_PASS: { get_attr: [postaff_db_password, value] }
+      user_data_format: RAW
+  db:
+    depends_on:
+    - joomla_db_password
+    - postaff_db_password
+    type: "OS::Trove::Instance"
+    properties:
+      flavor: { get_param: db_flavor }
+      name: { get_param: hostname }
+      size: { get_param: db_size }
+      databases:
+        - name: { get_param: primary_db_name }
+        - name: { get_param: secondary_db_name }
+      users:
+        - name: { get_param: primary_db_user }
+          password: { get_attr: [joomla_db_password, value] }
+          databases:
+          - { get_param: primary_db_name }
+        - name: { get_param: secondary_db_user }
+          password: { get_attr: [postaff_db_password, value] }
+          databases:
+          - { get_param: secondary_db_name }
+
+outputs:
+  instance_ip:
+    description: The IPv4 address of the deployed instance.
+    value: { get_attr: [web, accessIPv4] }
+  database_host:
+    description: The hostname for the database instance
+    value: { get_attr: [db, hostname] }
+  primary_password:
+    description: The Joomla! database user's password (joomla_user@joomla_db)
+    value: { get_attr: [joomla_db_password, value] }
+  secondary_password:
+    description: The PAP4 database user's password (postaff_user@postaff_db)
+    value: { get_attr: [postaff_db_password, value] }
