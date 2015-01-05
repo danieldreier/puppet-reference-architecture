@@ -45,5 +45,5 @@ mod 'graphite',
 
 # generate passwords
 mod 'secretbox',
-  :git => 'git://github.com:sdodson/puppet-secretbox.git',
+  :git => 'git://github.com/sdodson/puppet-secretbox.git',
   :ref => 'a48d04d1e0f9cda7c9f017731c7716db2769d809'
