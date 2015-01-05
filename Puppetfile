@@ -9,6 +9,7 @@ mod "hunner/hiera"
 mod 'puppetdbquery',
   :git => 'git://github.com/dalen/puppet-puppetdbquery.git'
 
+
 mod "puppetlabs/haproxy"
 
 mod "danieldreier/trigger"
@@ -36,3 +37,13 @@ mod "ploperations/rack"
 mod "puppetlabs/postgresql"
 mod "puppetlabs/ruby"
 mod "puppetlabs/apache"
+
+# metrics
+mod 'graphite',
+  :git => 'git://github.com/echocat/puppet-graphite.git',
+  :ref => 'v5.8.0'
+
+# generate passwords
+mod 'secretbox',
+  :git => 'git://github.com:sdodson/puppet-secretbox.git',
+  :ref => 'a48d04d1e0f9cda7c9f017731c7716db2769d809'
