@@ -4,7 +4,6 @@ class profile::base::debian {
     purge_sources_list   => true,
     purge_sources_list_d => true,
   }
-  include ::puppetlabs_apt
   class { '::apt::backports':
     pin_priority => 500,
   }
