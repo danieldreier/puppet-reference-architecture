@@ -20,6 +20,5 @@ class profile::puppet::agent {
     configtimeout   => $configtimeout,
     stringify_facts => $stringifyfacts,
     method          => 'cron',
-    parser          => 'future',
   }
 }

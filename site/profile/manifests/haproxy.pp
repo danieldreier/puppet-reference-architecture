@@ -1,6 +1,4 @@
 class profile::haproxy {
-  include profile::backports
-
   class { '::haproxy':
     global_options   => {
       'log'     => "${::ipaddress} local0",
@@ -32,7 +30,7 @@ class profile::haproxy {
       ],
       'maxconn' => '8000'
     },
-    require => Class['profile::backports'],
+    require          => Class['::apt::backports'],
   }
 
 }

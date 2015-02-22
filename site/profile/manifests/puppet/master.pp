@@ -47,22 +47,17 @@ class profile::puppet::master (
   }
 
   class { '::puppet::server':
-    modulepath      => [
-      '/vagrant/site',
-      '/vagrant/modules',
-      '$confdir/modules',
-      '$confdir/environments/$environment/modules/site',
-      '$confdir/environments/$environment/modules/site/dist',
-    ],
-    manage_puppetdb => true,
-    reporturl       => "https://${::fqdn}/reports",
-    servertype      => $servertype,
-    manifest        => '/vagrant/site.pp',
-    parser          => 'future',
-    ca              => true,
-    stringify_facts => false,
-    agent_installer => true,
-    reports         => [
+    directoryenvs    => true,
+    basemodulepath   => '/vagrant/site:/vagrant/modules',
+    environmentpath  => '$confdir/environments',
+    manage_puppetdb  => true,
+    reporturl        => "https://${::fqdn}/reports",
+    servertype       => $servertype,
+    default_manifest => '/vagrant/site.pp',
+    parser           => 'future',
+    ca               => true,
+    stringify_facts  => false,
+    reports          => [
       'https',
       'store',
       'puppetdb',
