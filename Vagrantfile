@@ -32,13 +32,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       node.vm.provision "shell",
         inline: "bash /vagrant/bootstrap-master.sh"
     end
-    config.vm.define :apachepuppetmaster do |node|
-      node.vm.hostname = 'puppetmaster-apache01-vagrant.example.com'
-      node.vm.network :private_network, :auto_network => true
-      node.vm.provision :hosts
-    #  node.vm.provision "shell",
-    #    inline: "bash /vagrant/bootstrap-master.sh"
-    end
     config.vm.define :lb01 do |node|
       node.vm.hostname = 'website-lb01-vagrant.example.com'
       node.vm.network :private_network, :auto_network => true
@@ -66,6 +59,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     end
     config.vm.define :web03 do |node|
       node.vm.hostname = 'website-web03-vagrant.example.com'
+      node.vm.box = 'puppetlabs/debian-7.6-64-puppet'
+      node.vm.network :private_network, :auto_network => true
+      node.vm.provision :hosts
+      node.vm.provision "shell",
+        inline: "puppet agent --test --server puppetmaster-aio01-vagrant.example.com --waitforcert 5"
+    end
+    config.vm.define :graphite01 do |node|
+      node.vm.hostname = 'graphite-aio01-vagrant.example.com'
       node.vm.box = 'puppetlabs/debian-7.6-64-puppet'
       node.vm.network :private_network, :auto_network => true
       node.vm.provision :hosts
