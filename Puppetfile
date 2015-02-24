@@ -10,7 +10,9 @@ mod 'puppetdbquery',
   :git => 'git://github.com/dalen/puppet-puppetdbquery.git'
 
 
+# website related stuff
 mod "puppetlabs/haproxy"
+mod 'memcached',            :git => 'git://github.com/saz/puppet-memcached.git',                    :ref => 'b1c0011d971890fc0eeb66b136a553c9009e6123'
 
 mod "danieldreier/trigger"
 mod "gini/archive"
