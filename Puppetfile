@@ -17,6 +17,8 @@ mod 'memcached',            :git => 'git://github.com/saz/puppet-memcached.git',
 mod "danieldreier/trigger"
 mod "gini/archive"
 
+
+
 # zack/r10k deps
 mod "zack/r10k"
 mod "puppetlabs/gcc"
@@ -54,3 +56,6 @@ mod 'secretbox',
 mod "motd",
   :git => 'git://github.com/puppetlabs-operations/puppet-motd.git',
   :ref => 'make_banner_generic'
+
+mod 'mcollective',          :git => 'git://github.com/puppetlabs/puppetlabs-mcollective.git',     :ref => '39b17ea5797de1196f9108972b55336442bf9525'
+mod 'richardc/datacat',     :git => 'git://github.com/richardc/puppet-datacat.git',           :ref => '6a2017b31a8808de35b89d90b9e2b681ef9a0918'
